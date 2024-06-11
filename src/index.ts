@@ -1,6 +1,8 @@
 import cors from "@elysiajs/cors";
 import swagger from "@elysiajs/swagger";
 import { Elysia, t } from "elysia";
+import authRoutes from "./routers/auth.routes";
+import roleRoutes from "./routers/role.routes";
 
 const app = new Elysia()
   .use(
@@ -14,6 +16,51 @@ const app = new Elysia()
     })
   )
   .use(cors())
+  //=========== Error Handler ======================
+  .onError(({ code, error, set }) => {
+    console.log("=============Error handler===========");
+    console.log("error ==>", error);
+    console.log("Code ==>", code);
+
+    switch (code) {
+      case "VALIDATION":
+        set.status = 400;
+        let errors = error.all;
+        console.log(errors);
+        let message = "";
+
+        switch (errors[0].schema.default) {
+          case "File":
+            message = `${errors[0].path.replace(
+              /^\//,
+              ""
+            )} must be ${errors[0].schema.extension.join(
+              " or "
+            )} with max size of ${errors[0].schema.maxSize}`;
+            break;
+
+          default:
+            message = `${errors[0].path.replace(/^\//, "")} ${
+              errors[0].message
+            }`;
+        }
+
+        return {
+          message: message,
+        };
+      case "NOT_FOUND":
+        set.status = 404;
+        return {
+          message: error.message,
+        };
+      default:
+        set.status = 500;
+
+        return {
+          message: error.message,
+        };
+    }
+  })
   .get(
     "/",
     () => {
@@ -27,6 +74,8 @@ const app = new Elysia()
       },
     }
   )
+  .use(authRoutes)
+  .use(roleRoutes)
   .listen(process.env.APP_PORT || 3000);
 
 console.log(
