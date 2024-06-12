@@ -7,7 +7,7 @@ import locationRoutes from "./routers/location.routes";
 import rbacRoutes from "./routers/rbac.routes";
 import minioClient from "./config/minio.config";
 import employeeRoutes from "./routers/employee.routes";
-
+import userRoutes from "./routers/user.routes";
 
 const app = new Elysia()
   .use(
@@ -45,8 +45,9 @@ const app = new Elysia()
             break;
 
           default:
-            message = `${errors[0].path.replace(/^\//, "")} ${errors[0].message
-              }`;
+            message = `${errors[0].path.replace(/^\//, "")} ${
+              errors[0].message
+            }`;
         }
 
         return {
@@ -83,6 +84,7 @@ const app = new Elysia()
   .use(locationRoutes)
   .use(rbacRoutes)
   .use(employeeRoutes)
+  .use(userRoutes)
   .listen(process.env.APP_PORT || 3000);
 
 console.log(

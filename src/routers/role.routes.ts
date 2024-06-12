@@ -65,7 +65,7 @@ const roleRoutes = new Elysia({ prefix: "/role" })
           },
           {
             headers: t.Object({
-              authorization: t.TemplateLiteral('Bearer ${string}'),
+              authorization: t.TemplateLiteral("Bearer ${string}"),
             }),
             body: t.Object({
               name: t.String(),
@@ -137,7 +137,7 @@ const roleRoutes = new Elysia({ prefix: "/role" })
           },
           {
             headers: t.Object({
-              authorization: t.TemplateLiteral('Bearer ${string}'),
+              authorization: t.TemplateLiteral("Bearer ${string}"),
             }),
             query: t.Object({
               page: t.String(),
@@ -215,7 +215,7 @@ const roleRoutes = new Elysia({ prefix: "/role" })
           },
           {
             headers: t.Object({
-              authorization: t.TemplateLiteral('Bearer ${string}'),
+              authorization: t.TemplateLiteral("Bearer ${string}"),
             }),
             body: t.Object({
               id: t.Number(),
@@ -273,7 +273,7 @@ const roleRoutes = new Elysia({ prefix: "/role" })
           },
           {
             headers: t.Object({
-              authorization: t.TemplateLiteral('Bearer ${string}'),
+              authorization: t.TemplateLiteral("Bearer ${string}"),
             }),
             query: t.Object({
               id: t.String(),
@@ -282,6 +282,61 @@ const roleRoutes = new Elysia({ prefix: "/role" })
               200: t.Object({
                 message: t.String(),
               }),
+              400: t.Object({
+                message: t.String(),
+              }),
+              401: t.Object({
+                message: t.String(),
+              }),
+              403: t.Object({
+                message: t.String(),
+              }),
+              404: t.Object({
+                message: t.String(),
+              }),
+              500: t.Object({
+                message: t.String(),
+              }),
+            },
+          }
+        )
+        .get(
+          "/list",
+          async ({ set, query, user_role }) => {
+            return await prisma.$transaction(async (prisma) => {
+              if (!["sa", "admin hr"].includes(user_role.toLowerCase())) {
+                set.status = 403;
+                return { message: "forbidden" };
+              }
+              let { keyword } = query;
+
+              if (!keyword) keyword = "";
+
+              return await prisma.position.findMany({
+                where: {
+                  name: {
+                    startsWith: `%${keyword}`,
+                    mode: "insensitive",
+                  },
+                },
+                select: { id: true, name: true },
+              });
+            });
+          },
+          {
+            headers: t.Object({
+              authorization: t.TemplateLiteral("Bearer ${string}"),
+            }),
+            query: t.Object({
+              keyword: t.Optional(t.MaybeEmpty(t.String())),
+            }),
+            response: {
+              200: t.Array(
+                t.Object({
+                  id: t.Number(),
+                  name: t.String(),
+                })
+              ),
               400: t.Object({
                 message: t.String(),
               }),

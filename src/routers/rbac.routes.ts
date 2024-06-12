@@ -42,55 +42,58 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
             user_role: data.user_role,
           };
         })
-        .post('/', async ({ set, body, user_role }) => {
-          return await prisma.$transaction(async (prisma) => {
-            if (!["sa", "admin hr"].includes(user_role.toLowerCase())) {
-              set.status = 403;
-              return { message: "forbidden" };
-            }
-            const { url, title, icon, parent } = body
-
-            await prisma.accessMenu.create({
-              data: {
-                url: url,
-                title: title,
-                icon: icon,
-                parent: parent
+        .post(
+          "/",
+          async ({ set, body, user_role }) => {
+            return await prisma.$transaction(async (prisma) => {
+              if (!["sa", "admin hr"].includes(user_role.toLowerCase())) {
+                set.status = 403;
+                return { message: "forbidden" };
               }
-            })
-            return {
-              message: `Menu ${title} created`
-            }
-          })
+              const { url, title, icon, parent } = body;
 
-        }, {
-          headers: t.Object({
-            authorization: t.TemplateLiteral('Bearer ${string}'),
-          }),
-          body: t.Object({
-            url: t.String(),
-            title: t.String(),
-            icon: t.String(),
-            parent: t.Number()
-          }),
-          response: {
-            200: t.Object({
-              message: t.String(),
-            }),
-            400: t.Object({
-              message: t.String(),
-            }),
-            401: t.Object({
-              message: t.String(),
-            }),
-            403: t.Object({
-              message: t.String(),
-            }),
-            500: t.Object({
-              message: t.String(),
-            }),
+              await prisma.accessMenu.create({
+                data: {
+                  url: url,
+                  title: title,
+                  icon: icon,
+                  parent: parent,
+                },
+              });
+              return {
+                message: `Menu ${title} created`,
+              };
+            });
           },
-        })
+          {
+            headers: t.Object({
+              authorization: t.TemplateLiteral("Bearer ${string}"),
+            }),
+            body: t.Object({
+              url: t.String(),
+              title: t.String(),
+              icon: t.String(),
+              parent: t.Number(),
+            }),
+            response: {
+              200: t.Object({
+                message: t.String(),
+              }),
+              400: t.Object({
+                message: t.String(),
+              }),
+              401: t.Object({
+                message: t.String(),
+              }),
+              403: t.Object({
+                message: t.String(),
+              }),
+              500: t.Object({
+                message: t.String(),
+              }),
+            },
+          }
+        )
         .get(
           "/",
           async ({ set, user_role, query }) => {
@@ -101,19 +104,20 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
               }
               const { page, pageSize } = query;
 
-              const total = await prisma.accessMenu.count({ where: { parent: null } });
+              const total = await prisma.accessMenu.count({
+                where: { parent: null },
+              });
               const accessMenu = await prisma.accessMenu.findMany({
                 where: { parent: null },
                 skip: Number(page) * Number(pageSize),
                 take: Number(pageSize),
                 select: {
-
                   id: true,
                   url: true,
                   title: true,
                   icon: true,
                   child: true,
-                }
+                },
               });
 
               return {
@@ -126,7 +130,7 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
           },
           {
             headers: t.Object({
-              authorization: t.TemplateLiteral('Bearer ${string}'),
+              authorization: t.TemplateLiteral("Bearer ${string}"),
             }),
             query: t.Object({
               page: t.String(),
@@ -148,9 +152,8 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
                         url: t.String(),
                         title: t.String(),
                         icon: t.String(),
-
                       })
-                    )
+                    ),
                   })
                 ),
                 page: t.Number(),
@@ -170,7 +173,8 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
               }),
             },
           }
-        ).put(
+        )
+        .put(
           "/",
           async ({ set, body, user_role }) => {
             return await prisma.$transaction(async (prisma) => {
@@ -199,7 +203,7 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
                   url: url,
                   title,
                   icon,
-                  parent: parent
+                  parent: parent,
                 },
               });
 
@@ -208,7 +212,7 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
           },
           {
             headers: t.Object({
-              authorization: t.TemplateLiteral('Bearer ${string}'),
+              authorization: t.TemplateLiteral("Bearer ${string}"),
             }),
             body: t.Object({
               id: t.Number(),
@@ -239,7 +243,8 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
               }),
             },
           }
-        ).delete(
+        )
+        .delete(
           "/",
           async ({ set, query, user_role }) => {
             return await prisma.$transaction(async (prisma) => {
@@ -265,7 +270,7 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
           },
           {
             headers: t.Object({
-              authorization: t.TemplateLiteral('Bearer ${string}'),
+              authorization: t.TemplateLiteral("Bearer ${string}"),
             }),
             query: t.Object({
               id: t.String(),
@@ -292,21 +297,21 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
             },
           }
         )
-        .get('/access_menu', async ({ set, user_role }) => {
+        .get("/access_menu", async ({ set, user_role }) => {
           return await prisma.$transaction(async (prisma) => {
             const accessMenusArray = await prisma.position.findFirst({
               where: {
-                name: user_role
+                name: user_role,
               },
-              select: { access_menus: true }
-            })
+              select: { access_menus: true },
+            });
             if (!accessMenusArray) {
-              set.status = 403
+              set.status = 403;
               return {
-                message: "forbidden"
-              }
+                message: "forbidden",
+              };
             }
-            console.log(accessMenusArray.access_menus)
+            console.log(accessMenusArray.access_menus);
 
             const access = await prisma.accessMenu.findMany({
               where: {
@@ -318,18 +323,73 @@ const rbacRoutes = new Elysia({ prefix: "/rbac" })
                 url: true,
                 title: true,
                 icon: true,
-                child: true
-              }
-            })
+                child: true,
+              },
+            });
 
-            const filteredAccess = access.map(menu => ({
+            const filteredAccess = access.map((menu) => ({
               ...menu,
-              child: menu.child.filter(childMenu =>
+              child: menu.child.filter((childMenu) =>
                 accessMenusArray.access_menus.includes(childMenu.id)
-              )
+              ),
             }));
-            return filteredAccess
-          })
+            return filteredAccess;
+          });
         })
+        .get(
+          "/list",
+          async ({ set, query, user_role }) => {
+            return await prisma.$transaction(async (prisma) => {
+              if (!["sa", "admin hr"].includes(user_role.toLowerCase())) {
+                set.status = 403;
+                return { message: "forbidden" };
+              }
+              let { keyword } = query;
+
+              if (!keyword) keyword = "";
+
+              return await prisma.accessMenu.findMany({
+                where: {
+                  title: {
+                    startsWith: `%${keyword}`,
+                    mode: "insensitive",
+                  },
+                },
+                select: { id: true, title: true },
+              });
+            });
+          },
+          {
+            headers: t.Object({
+              authorization: t.TemplateLiteral("Bearer ${string}"),
+            }),
+            query: t.Object({
+              keyword: t.Optional(t.MaybeEmpty(t.String())),
+            }),
+            response: {
+              200: t.Array(
+                t.Object({
+                  id: t.Number(),
+                  title: t.String(),
+                })
+              ),
+              400: t.Object({
+                message: t.String(),
+              }),
+              401: t.Object({
+                message: t.String(),
+              }),
+              403: t.Object({
+                message: t.String(),
+              }),
+              404: t.Object({
+                message: t.String(),
+              }),
+              500: t.Object({
+                message: t.String(),
+              }),
+            },
+          }
+        )
   );
 export default rbacRoutes;

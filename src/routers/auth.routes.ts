@@ -224,7 +224,7 @@ const authRoutes = new Elysia({ prefix: "/auth" })
         }
       },
       headers: t.Object({
-        authorization: t.TemplateLiteral('Bearer ${string}'),
+        authorization: t.TemplateLiteral("Bearer ${string}"),
       }),
 
       body: t.Object({
@@ -243,6 +243,7 @@ const authRoutes = new Elysia({ prefix: "/auth" })
         200: t.Object({ message: t.String() }),
         400: t.Object({ message: t.String() }),
         401: t.Object({ message: t.String() }),
+        500: t.Object({ message: t.String() }),
       },
     }
   );
