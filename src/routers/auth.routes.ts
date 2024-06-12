@@ -224,7 +224,7 @@ const authRoutes = new Elysia({ prefix: "/auth" })
         }
       },
       headers: t.Object({
-        authorization: t.String(),
+        authorization: t.TemplateLiteral('Bearer ${string}'),
       }),
 
       body: t.Object({

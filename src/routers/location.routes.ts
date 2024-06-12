@@ -3,7 +3,7 @@ import jwt, { JWTPayloadSpec } from "@elysiajs/jwt";
 import prisma from "../config/db.config";
 import bearer from "@elysiajs/bearer";
 
-const roleRoutes = new Elysia({ prefix: "/role" })
+const locationRoutes = new Elysia({ prefix: "/location" })
   .use(
     jwt({
       name: "jwt",
@@ -42,54 +42,49 @@ const roleRoutes = new Elysia({ prefix: "/role" })
             user_role: data.user_role,
           };
         })
-        .post(
-          "/",
-          async ({ set, body, user_id, user_role }) => {
-            return await prisma.$transaction(async (prisma) => {
-              console.log(user_id);
-              if (!["sa", "admin hr"].includes(user_role.toLowerCase())) {
-                set.status = 403;
-                return { message: "forbidden" };
+        .post('/', async ({ set, body, user_role }) => {
+          return await prisma.$transaction(async (prisma) => {
+            if (!["sa", "admin hr"].includes(user_role.toLowerCase())) {
+              set.status = 403;
+              return { message: "forbidden" };
+            }
+            const { name } = body
+
+            await prisma.location.create({
+              data: {
+                name: name
               }
-              const { name, accessMenus } = body;
+            })
+            return {
+              message: `Location ${name} created`
+            }
+          })
 
-              const newRole = await prisma.position.create({
-                data: {
-                  name: name,
-                  access_menus: accessMenus,
-                },
-              });
-
-              return { message: `role ${name} created` };
-            });
+        }, {
+          headers: t.Object({
+            authorization: t.TemplateLiteral('Bearer ${string}'),
+          }),
+          body: t.Object({
+            name: t.String()
+          }),
+          response: {
+            200: t.Object({
+              message: t.String(),
+            }),
+            400: t.Object({
+              message: t.String(),
+            }),
+            401: t.Object({
+              message: t.String(),
+            }),
+            403: t.Object({
+              message: t.String(),
+            }),
+            500: t.Object({
+              message: t.String(),
+            }),
           },
-          {
-            headers: t.Object({
-              authorization: t.TemplateLiteral('Bearer ${string}'),
-            }),
-            body: t.Object({
-              name: t.String(),
-              accessMenus: t.Array(t.Number()),
-            }),
-            response: {
-              200: t.Object({
-                message: t.String(),
-              }),
-              400: t.Object({
-                message: t.String(),
-              }),
-              401: t.Object({
-                message: t.String(),
-              }),
-              403: t.Object({
-                message: t.String(),
-              }),
-              500: t.Object({
-                message: t.String(),
-              }),
-            },
-          }
-        )
+        })
         .get(
           "/",
           async ({ set, user_role, query }) => {
@@ -99,37 +94,17 @@ const roleRoutes = new Elysia({ prefix: "/role" })
                 return { message: "forbidden" };
               }
               const { page, pageSize } = query;
-              const total = await prisma.position.count();
-              const roles = await prisma.position.findMany({
+
+              const total = await prisma.location.count();
+              const locations = await prisma.location.findMany({
                 skip: Number(page) * Number(pageSize),
                 take: Number(pageSize),
               });
 
-              const rolesWithAccessMenus = await Promise.all(
-                roles.map(async (role) => {
-                  const access_menus = await prisma.accessMenu.findMany({
-                    where: {
-                      id: {
-                        in: role.access_menus,
-                      },
-                    },
-                    select: {
-                      id: true,
-                      url: true,
-                      title: true,
-                      icon: true,
-                    },
-                  });
-                  return {
-                    ...role,
-                    access_menus: access_menus,
-                  };
-                })
-              );
 
               return {
                 total: total,
-                data: rolesWithAccessMenus,
+                data: locations,
                 page: Number(page),
                 total_pages: Math.ceil(total / Number(pageSize)),
               };
@@ -150,13 +125,7 @@ const roleRoutes = new Elysia({ prefix: "/role" })
                   t.Object({
                     id: t.Number(),
                     name: t.String(),
-                    access_menus: t.Array(
-                      t.Object({
-                        id: t.Number(),
-                        url: t.String(),
-                        icon: t.MaybeEmpty(t.String()),
-                      })
-                    ),
+
                     created_at: t.Date(),
                     updated_at: t.Date(),
                   })
@@ -178,8 +147,7 @@ const roleRoutes = new Elysia({ prefix: "/role" })
               }),
             },
           }
-        )
-        .put(
+        ).put(
           "/",
           async ({ set, body, user_role }) => {
             return await prisma.$transaction(async (prisma) => {
@@ -187,30 +155,30 @@ const roleRoutes = new Elysia({ prefix: "/role" })
                 set.status = 403;
                 return { message: "forbidden" };
               }
-              const { id, name, accessMenus } = body;
+              const { id, name } = body;
 
-              const existRole = await prisma.position.findFirst({
+              const existLocation = await prisma.location.findFirst({
                 where: {
                   id: id,
                 },
               });
 
-              if (!existRole) {
+              if (!existLocation) {
                 set.status = 404;
                 return {
                   message: `Role ${id} not found`,
                 };
               }
 
-              await prisma.position.update({
+              await prisma.location.update({
                 where: { id: id },
                 data: {
                   name: name,
-                  access_menus: accessMenus,
+
                 },
               });
 
-              return { message: `role id ${existRole.id} updated` };
+              return { message: `Location updated` };
             });
           },
           {
@@ -220,7 +188,6 @@ const roleRoutes = new Elysia({ prefix: "/role" })
             body: t.Object({
               id: t.Number(),
               name: t.String(),
-              accessMenus: t.Array(t.Number()),
             }),
             response: {
               200: t.Object({
@@ -243,8 +210,7 @@ const roleRoutes = new Elysia({ prefix: "/role" })
               }),
             },
           }
-        )
-        .delete(
+        ).delete(
           "/",
           async ({ set, query, user_role }) => {
             return await prisma.$transaction(async (prisma) => {
@@ -253,22 +219,22 @@ const roleRoutes = new Elysia({ prefix: "/role" })
                 return { message: "forbidden" };
               }
               const { id } = query;
-              const existRole = await prisma.position.findFirst({
+              const existLocation = await prisma.location.findFirst({
                 where: { id: Number(id) },
                 select: {
                   name: true,
                 },
               });
 
-              if (!existRole) {
+              if (!existLocation) {
                 set.status = 404;
                 return { message: `Role id ${id} not found` };
               }
-              await prisma.position.delete({
+              await prisma.location.delete({
                 where: { id: Number(id) },
               });
 
-              return { message: `role ${existRole.name} deleted` };
+              return { message: `Location ${existLocation.name} deleted` };
             });
           },
           {
@@ -301,4 +267,4 @@ const roleRoutes = new Elysia({ prefix: "/role" })
           }
         )
   );
-export default roleRoutes;
+export default locationRoutes;

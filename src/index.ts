@@ -3,6 +3,11 @@ import swagger from "@elysiajs/swagger";
 import { Elysia, t } from "elysia";
 import authRoutes from "./routers/auth.routes";
 import roleRoutes from "./routers/role.routes";
+import locationRoutes from "./routers/location.routes";
+import rbacRoutes from "./routers/rbac.routes";
+import minioClient from "./config/minio.config";
+import employeeRoutes from "./routers/employee.routes";
+
 
 const app = new Elysia()
   .use(
@@ -19,7 +24,7 @@ const app = new Elysia()
   //=========== Error Handler ======================
   .onError(({ code, error, set }) => {
     console.log("=============Error handler===========");
-    console.log("error ==>", error);
+    // console.log("error ==>", error);
     console.log("Code ==>", code);
 
     switch (code) {
@@ -40,9 +45,8 @@ const app = new Elysia()
             break;
 
           default:
-            message = `${errors[0].path.replace(/^\//, "")} ${
-              errors[0].message
-            }`;
+            message = `${errors[0].path.replace(/^\//, "")} ${errors[0].message
+              }`;
         }
 
         return {
@@ -76,6 +80,9 @@ const app = new Elysia()
   )
   .use(authRoutes)
   .use(roleRoutes)
+  .use(locationRoutes)
+  .use(rbacRoutes)
+  .use(employeeRoutes)
   .listen(process.env.APP_PORT || 3000);
 
 console.log(

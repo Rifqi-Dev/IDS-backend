@@ -13,22 +13,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id              String          @id @default(uuid())
-  email           String          @unique
-  name            String
-  password        String
-  phone           String          @unique
-  created_at      DateTime        @default(now())
-  updated_at      DateTime        @updatedAt
-  logins          Employee?       @relation("Employee")
+  id         String    @id @default(uuid())
+  email      String    @unique
+  name       String
+  password   String
+  phone      String    @unique
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  logins     Employee? @relation("Employee")
 }
 
 model Employee {
-  id              String         @id @default(uuid())
-  user_id         String         @unique
-  picture_profile String?     
+  id              String    @id @default(uuid())
+  user_id         String    @unique
+  picture_profile String?
   full_name       String
   place_of_birth  String?
   date_of_birth   DateTime?
@@ -37,36 +36,36 @@ model Employee {
   gender          String?
   position_id     Int
   location_id     Int?
-  created_at      DateTime       @default(now())
-  updated_at      DateTime       @updatedAt
-  user            User           @relation(fields: [user_id], references: [id], name: "Employee")
-  posisi          Position?       @relation(fields: [position_id ], references: [id], name: "Position")
-  Location        Location?       @relation(fields: [location_id ], references: [id], name: "Location")
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  user            User      @relation(fields: [user_id], references: [id], name: "Employee")
+  posisi          Position? @relation(fields: [position_id], references: [id], name: "Position")
+  Location        Location? @relation(fields: [location_id], references: [id], name: "Location")
 }
 
 model Position {
-  id                Int         @id @default(autoincrement())
-  name              String      @unique
-  access_menus      Int[]
-  created_at        DateTime    @default(now())
-  updated_at        DateTime    @updatedAt
-  employee          Employee[]  @relation("Position")
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  access_menus Int[]
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  employee     Employee[] @relation("Position")
 }
 
 model Location {
-  id                Int         @id @default(autoincrement())
-  name              String      @unique
-  created_at        DateTime    @default(now())
-  updated_at        DateTime    @updatedAt
-  employee          Employee[]  @relation("Location")
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  employee   Employee[] @relation("Location")
 }
 
-model AccessMenu{
-  id                Int            @id @default(autoincrement())
-  url               String
-  title             String
-  icon              String
-  children          Int?
-  parent             AccessMenu?     @relation("accessMenu",fields: [children],references: [id])
-  child            AccessMenu[]     @relation("accessMenu")
+model AccessMenu {
+  id       Int          @id @default(autoincrement())
+  url      String
+  title    String
+  icon     String
+  parent   Int?
+  children AccessMenu?  @relation("accessMenu", fields: [parent], references: [id])
+  child    AccessMenu[] @relation("accessMenu")
 }
