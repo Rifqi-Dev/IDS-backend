@@ -289,5 +289,44 @@ const userRoutes = new Elysia({ prefix: "/user" })
             },
           }
         )
+        .get("/access_menu", async ({ set, user_role }) => {
+          return await prisma.$transaction(async (prisma) => {
+            const accessMenusArray = await prisma.position.findFirst({
+              where: {
+                name: user_role,
+              },
+              select: { access_menus: true },
+            });
+            if (!accessMenusArray) {
+              set.status = 403;
+              return {
+                message: "forbidden",
+              };
+            }
+            console.log(accessMenusArray.access_menus);
+
+            const access = await prisma.accessMenu.findMany({
+              where: {
+                id: { in: accessMenusArray.access_menus },
+                parent: null,
+              },
+              select: {
+                id: true,
+                url: true,
+                title: true,
+                icon: true,
+                child: true,
+              },
+            });
+
+            const filteredAccess = access.map((menu) => ({
+              ...menu,
+              child: menu.child.filter((childMenu) =>
+                accessMenusArray.access_menus.includes(childMenu.id)
+              ),
+            }));
+            return filteredAccess;
+          });
+        })
   );
 export default userRoutes;

@@ -4,7 +4,6 @@ import { Elysia, t } from "elysia";
 import authRoutes from "./routers/auth.routes";
 import roleRoutes from "./routers/role.routes";
 import locationRoutes from "./routers/location.routes";
-import rbacRoutes from "./routers/rbac.routes";
 import minioClient from "./config/minio.config";
 import employeeRoutes from "./routers/employee.routes";
 import userRoutes from "./routers/user.routes";
@@ -82,7 +81,6 @@ const app = new Elysia()
   .use(authRoutes)
   .use(roleRoutes)
   .use(locationRoutes)
-  .use(rbacRoutes)
   .use(employeeRoutes)
   .use(userRoutes)
   .listen(process.env.APP_PORT || 3000);
