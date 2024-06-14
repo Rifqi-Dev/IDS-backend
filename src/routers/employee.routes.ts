@@ -151,12 +151,17 @@ const employeeRoutes = new Elysia({ prefix: "/employee" })
               }
 
               const { page, pageSize } = query;
+              let keyword = query.keyword || ''
 
               const total = await prisma.employee.count({
                 where: {
                   position_id: {
                     not: 1,
                   },
+                  full_name: {
+                    startsWith: `%${keyword}`,
+                    mode: "insensitive",
+                  }
                 },
               });
 
@@ -166,6 +171,10 @@ const employeeRoutes = new Elysia({ prefix: "/employee" })
                     position_id: {
                       not: 1,
                     },
+                    full_name: {
+                      startsWith: `%${keyword}`,
+                      mode: "insensitive",
+                    }
                   },
                   include: {
                     user: {
@@ -218,6 +227,7 @@ const employeeRoutes = new Elysia({ prefix: "/employee" })
             query: t.Object({
               page: t.String(),
               pageSize: t.String(),
+              keyword: t.Optional(t.MaybeEmpty(t.String())),
             }),
             response: {
               200: t.Object({

@@ -99,8 +99,23 @@ const roleRoutes = new Elysia({ prefix: "/role" })
                 return { message: "forbidden" };
               }
               const { page, pageSize } = query;
-              const total = await prisma.position.count();
+              let keyword = query.keyword || ''
+
+              const total = await prisma.position.count({
+                where: {
+                  name: {
+                    startsWith: `%${keyword}`,
+                    mode: "insensitive",
+                  },
+                },
+              });
               const roles = await prisma.position.findMany({
+                where: {
+                  name: {
+                    startsWith: `%${keyword}`,
+                    mode: "insensitive",
+                  },
+                },
                 skip: Number(page) * Number(pageSize),
                 take: Number(pageSize),
               });
@@ -142,6 +157,7 @@ const roleRoutes = new Elysia({ prefix: "/role" })
             query: t.Object({
               page: t.String(),
               pageSize: t.String(),
+              keyword: t.Optional(t.MaybeEmpty(t.String())),
             }),
             response: {
               200: t.Object({

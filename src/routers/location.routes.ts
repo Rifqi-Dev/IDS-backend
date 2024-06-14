@@ -97,9 +97,23 @@ const locationRoutes = new Elysia({ prefix: "/location" })
                 return { message: "forbidden" };
               }
               const { page, pageSize } = query;
+              let keyword = query.keyword || ''
 
-              const total = await prisma.location.count();
+              const total = await prisma.location.count({
+                where: {
+                  name: {
+                    startsWith: `%${keyword}`,
+                    mode: "insensitive",
+                  },
+                },
+              });
               const locations = await prisma.location.findMany({
+                where: {
+                  name: {
+                    startsWith: `%${keyword}`,
+                    mode: "insensitive",
+                  },
+                },
                 skip: Number(page) * Number(pageSize),
                 take: Number(pageSize),
               });
@@ -119,6 +133,7 @@ const locationRoutes = new Elysia({ prefix: "/location" })
             query: t.Object({
               page: t.String(),
               pageSize: t.String(),
+              keyword: t.Optional(t.MaybeEmpty(t.String())),
             }),
             response: {
               200: t.Object({
